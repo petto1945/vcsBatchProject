@@ -33,57 +33,59 @@ public class operChatController {
 	/**
 	 * CalctimerInfo - 개입/종료 시간계산 하
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@RequestMapping(value = "/calctimerinfo", method = RequestMethod.POST)
 	public void calcTimerInfo() {
-		HashMap<String, Object> findMongo = mongo.findOne(new Query(new Criteria("batchYn").is("N")), HashMap.class,
+		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
 				"LOG_OPER_CHAT");
+		
+		for (HashMap hashMap : findMongo) {
+			String roomNo = hashMap.containsKey("roomNo") ? hashMap.get("roomNo").toString() : "";
+			String date = hashMap.containsKey("date") ? hashMap.get("date").toString() : "";
+			String chatTime = hashMap.containsKey("chatTime") ? hashMap.get("chatTime").toString() : "";
+			String operName = hashMap.containsKey("operName") ? hashMap.get("operName").toString() : "";
+			String operEmail = hashMap.containsKey("operatorEmail") ? hashMap.get("operatorEmail").toString() : "";
+			try {
+				if (!"".equals(roomNo) && !"".equals(date) && !"".equals(chatTime) && !"".equals(operName)
+						&& !"".equals(operEmail)) {
 
-		String roomNo = findMongo.containsKey("roomNo") ? findMongo.get("roomNo").toString() : "";
-		String date = findMongo.containsKey("date") ? findMongo.get("date").toString() : "";
-		String chatTime = findMongo.containsKey("chatTime") ? findMongo.get("chatTime").toString() : "";
-		String operName = findMongo.containsKey("operName") ? findMongo.get("operName").toString() : "";
-		String operEmail = findMongo.containsKey("operatorEmail") ? findMongo.get("operatorEmail").toString() : "";
-		try {
-			if (!"".equals(roomNo) && !"".equals(date) && !"".equals(chatTime) && !"".equals(operName)
-					&& !"".equals(operEmail)) {
-
-				if (statiHm == null) {
-					statiHm = new HashMap<String, Object>();
-					statiHm.put(roomNo, findMongo);
-					findMongo.remove("batchYn");
-					updateJoinCnt(findMongo, "");
-				} else {
-					HashMap<String, Object> tHm = (HashMap<String, Object>) statiHm.get(roomNo);
-					if (tHm == null) {
-						statiHm.put(roomNo, findMongo);
-						updateJoinCnt(findMongo, "");
+					if (statiHm == null) {
+						statiHm = new HashMap<String, Object>();
+						statiHm.put(roomNo, hashMap);
+						hashMap.remove("batchYn");
+						updateJoinCnt(hashMap, "");
 					} else {
-						String fDate = findMongo.get("datß").toString();
-						String fChatTime = findMongo.get("chatTime").toString();
+						HashMap<String, Object> tHm = (HashMap<String, Object>) statiHm.get(roomNo);
+						if (tHm == null) {
+							statiHm.put(roomNo, hashMap);
+							updateJoinCnt(hashMap, "");
+						} else {
+							String fDate = hashMap.get("datß").toString();
+							String fChatTime = hashMap.get("chatTime").toString();
 
-						String tDate = tHm.get("date").toString();
-						String tChatTime = tHm.get("chatTime").toString();
+							String tDate = tHm.get("date").toString();
+							String tChatTime = tHm.get("chatTime").toString();
 
-						String sDate = fDate + fChatTime;
-						String eDate = tDate + tChatTime;
+							String sDate = fDate + fChatTime;
+							String eDate = tDate + tChatTime;
 
-						int diffmin = (int) getSubrCal(sDate, eDate);
+							int diffmin = (int) getSubrCal(sDate, eDate);
 
-						tHm.put("chatTime", diffmin);
-						tHm.put("sTime", fChatTime);
-						tHm.put("eTime", tChatTime);
-						tHm.remove("roomNo");
-						
-						System.out.println(tHm);
-						CalcTimeProcessBolt(tHm); // 상담로그
-						
-						statiHm.remove(roomNo);
+							tHm.put("chatTime", diffmin);
+							tHm.put("sTime", fChatTime);
+							tHm.put("eTime", tChatTime);
+							tHm.remove("roomNo");
+							
+							System.out.println(tHm);
+							CalcTimeProcessBolt(tHm); // 상담로그
+							
+							statiHm.remove(roomNo);
+						}
 					}
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 	}
 	
@@ -149,12 +151,7 @@ public class operChatController {
 		} else {
 			mongo.updateFirst(new Query(new Criteria("date").is(date)), new Update().inc("opChatTodayCount", 1),
 					collectionName);
-//			Mongo Template 용 쿼리
-//			Query query = new Query(new Criteria("date").is(date));
-//			query.fields().elemMatch("operators", Criteria.where("operEmail").is(operEmail));
-//			HashMap<String, Object> operDoc = mongo.findOne(query, HashMap.class, collectionName);
 			
-			// MongoTemplate 로 방법을 못찾아 Mongo Collection 을 사용해서 처
 			MongoCollection dashOperCollection = mongo.getCollection("VCS_REPORT_DASH_OPER");
 			Bson bsonFilter = Filters.and(Filters.eq("date", date)
                     , Filters.elemMatch("operators", Filters.eq("operEmail", operEmail))
@@ -173,8 +170,6 @@ public class operChatController {
 			} else {
 				// update
 				dashOperCollection.updateOne(bsonFilter, new Document("$inc", new Document("operators.$.chatCount", 1)));
-//				Mongo Template 용 업데이트 용
-//				mongo.updateFirst(query, new Update().inc("operators..chatCount", 1), collectionName);
 			}
 		}
 	}

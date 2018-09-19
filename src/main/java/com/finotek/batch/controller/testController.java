@@ -2,6 +2,7 @@ package com.finotek.batch.controller;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,28 +23,33 @@ public class testController {
 
 	/**
 	 * 사용자정보 체크
+	 * 
 	 * @param request
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@RequestMapping(value = "/userconnection", method = RequestMethod.POST)
 	public void userConnection() {
-		HashMap<String, Object> findMongo = mongo.findOne(new Query(new Criteria("batchYn").is("N")), HashMap.class, "LOG_USER_CONN");
-		if(findMongo == null) {
+		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
+				"LOG_USER_CONN");
+		if (findMongo == null || findMongo.size() == 0) {
+			System.out.println(" userConnection No Find MongoDB");
 			return;
 		}
-		
-		System.out.println("userConnection input data ================== : " + findMongo);
-		
-		String userid = findMongo.containsKey("userid") ? findMongo.get("userid").toString() : "";
-		String date = findMongo.containsKey("date") ? findMongo.get("date").toString() : "";
 
-		if (!"".equals(userid) && !"".equals(date)) {
-			findMongo.put("qustType", "userConn");
-			this.dashCountProcessBolt(findMongo);
-			
-			Criteria criteria = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
-			Query query = new Query(criteria);
-			mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_USER_CONN");
+		for (HashMap<String, Object> hashMap : findMongo) {
+			System.out.println("userConnection input data ================== : " + hashMap);
+
+			String userid = hashMap.containsKey("userid") ? hashMap.get("userid").toString() : "";
+			String date = hashMap.containsKey("date") ? hashMap.get("date").toString() : "";
+
+			if (!"".equals(userid) && !"".equals(date)) {
+				hashMap.put("qustType", "userConn");
+				this.dashCountProcessBolt(hashMap);
+
+				Criteria criteria = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
+				Query query = new Query(criteria);
+				mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_USER_CONN");
+			}
 		}
 	}
 
@@ -52,36 +58,40 @@ public class testController {
 	 * 
 	 * @param request
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"rawtypes" })
 	@RequestMapping(value = "/dashcountbolt", method = RequestMethod.POST)
 	public void dashCountBolt() {
-		HashMap<String, Object> findMongo = mongo.findOne(new Query(new Criteria("batchYn").is("N")), HashMap.class, "LOG_CHAT_INFO");
-		if(findMongo == null) {
+		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
+				"LOG_CHAT_INFO");
+		if (findMongo == null || findMongo.size() == 0) {
 			return;
 		}
-		System.out.println("dashCountBolt input data ================== : " + findMongo);
-		System.out.println("dashCountBolt input qustType ================== : " + findMongo.get("qustType"));
-		
-		String status = findMongo.containsKey("status") ? findMongo.get("status").toString() : "";
-		String date = findMongo.containsKey("date") ? findMongo.get("date").toString() : "";
-		String qustType = findMongo.containsKey("qustType") ? findMongo.get("qustType").toString() : "";
-		String userid = findMongo.containsKey("userid") ? findMongo.get("userid").toString() : "";
 
-		HashMap<String, Object> map = new HashMap<String, Object>();
-		map.put("status", status);
-		map.put("date", date);
-		map.put("qustType", qustType);
+		for (HashMap hashMap : findMongo) {
+			System.out.println("dashCountBolt input data ================== : " + hashMap);
+			System.out.println("dashCountBolt input qustType ================== : " + hashMap.get("qustType"));
 
-		if (!"".equals(status) && !"".equals(date) && !"".equals(qustType)) {
-			if ("true".equals(status)) {
-				this.dashCountProcessBolt(map);
-			} else {
-				map.put("qustType", "fail");
-				this.dashCountProcessBolt(map);
+			String status = hashMap.containsKey("status") ? hashMap.get("status").toString() : "";
+			String date = hashMap.containsKey("date") ? hashMap.get("date").toString() : "";
+			String qustType = hashMap.containsKey("qustType") ? hashMap.get("qustType").toString() : "";
+			String userid = hashMap.containsKey("userid") ? hashMap.get("userid").toString() : "";
+
+			HashMap<String, Object> map = new HashMap<String, Object>();
+			map.put("status", status);
+			map.put("date", date);
+			map.put("qustType", qustType);
+
+			if (!"".equals(status) && !"".equals(date) && !"".equals(qustType)) {
+				if ("true".equals(status)) {
+					this.dashCountProcessBolt(map);
+				} else {
+					map.put("qustType", "fail");
+					this.dashCountProcessBolt(map);
+				}
+				Criteria criteria = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
+				Query query = new Query(criteria);
+				mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_CHAT_INFO");
 			}
-			Criteria criteria = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
-			Query query = new Query(criteria);
-			mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_CHAT_INFO");
 		}
 	}
 
@@ -90,46 +100,47 @@ public class testController {
 	 * 
 	 * @param request
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@RequestMapping(value = "/questionprocessbolt", method = RequestMethod.POST)
 	public void questionProcessBolt() {
-		HashMap<String, Object> findMongo = mongo.findOne(new Query(new Criteria("batchYn").is("N")), HashMap.class, "LOG_CHAT_INFO");
-		if(findMongo == null) {
+		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
+				"LOG_CHAT_INFO");
+		if (findMongo == null || findMongo.size() == 0) {
 			return;
 		}
-		
-		System.out.println("questionProcessBolt input data ================== : " + findMongo);
-		System.out.println("questionProcessBolt input qustType ================== : " + findMongo.get("qustType"));
-		
-		String userid = findMongo.containsKey("userid") ? findMongo.get("userid").toString() : "";
-		String date = findMongo.containsKey("date") ? findMongo.get("date").toString() : "";
-		String result = findMongo.containsKey("status") ? findMongo.get("status").toString() : "";
-		
-		try {
-			if (!"".equals(result)) {
-				findMongo.remove("userid");
-				Document doc = new Document();
-				doc = this.setDoc(doc, findMongo);
-				doc.remove("status");
-	
-				if ("true".equals(result)) {
-					// 1. VCS_REPORT_QUESTION 저장 시작
-					doc = this.saveVcsReportQuestion(doc);
+
+		for (HashMap hashMap : findMongo) {
+			System.out.println("questionProcessBolt input data ================== : " + hashMap);
+			System.out.println("questionProcessBolt input qustType ================== : " + hashMap.get("qustType"));
+
+			String userid = hashMap.containsKey("userid") ? hashMap.get("userid").toString() : "";
+			String date = hashMap.containsKey("date") ? hashMap.get("date").toString() : "";
+			String result = hashMap.containsKey("status") ? hashMap.get("status").toString() : "";
+
+			try {
+				if (!"".equals(result)) {
+					hashMap.remove("userid");
+					Document doc = new Document();
+					doc = this.setDoc(doc, hashMap);
+					doc.remove("status");
+
+					if ("true".equals(result)) {
+						// 1. VCS_REPORT_QUESTION 저장 시작
+						doc = this.saveVcsReportQuestion(doc);
+					}
+
+					// 2. VCS_REPORT_ANSWER_STATUS 저장 시작
+					doc.put("result", result);
+					this.saveVcsReportAnswerStatus(doc);
+
+					Criteria criteria = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
+					Query query = new Query(criteria);
+					mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_CHAT_INFO");
 				}
-	
-				// 2. VCS_REPORT_ANSWER_STATUS 저장 시작
-				doc.put("result", result);
-				this.saveVcsReportAnswerStatus(doc);
-				
-				Criteria criteria = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
-				Query query = new Query(criteria);
-				mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_CHAT_INFO");
-	
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
-	
 	}
 
 	/**
@@ -137,51 +148,53 @@ public class testController {
 	 * 
 	 * @param request
 	 */
-	@SuppressWarnings({ "unchecked", "unused" })
+	@SuppressWarnings({ "unchecked", "unused", "rawtypes" })
 	@RequestMapping(value = "writeuserprocessbolt", method = RequestMethod.POST)
 	public void writeUserProcessBolt() {
-		HashMap<String, Object> findMongo = mongo.findOne(new Query(new Criteria("batchYn").is("N")), HashMap.class, "LOG_CHAT_INFO");
-		if(findMongo == null) {
+		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
+				"LOG_CHAT_INFO");
+		if (findMongo == null || findMongo.size() == 0) {
 			return;
 		}
 		
-		System.out.println("writeuserprocessbolt input data ================== : " + findMongo);
-		System.out.println("writeuserprocessbolt input qustType ================== : " + findMongo.get("qustType"));
-	
-		String userid = findMongo.containsKey("userid") ? findMongo.get("userid").toString() : "";
-		String date = findMongo.containsKey("date") ? findMongo.get("date").toString() : "";
-		String time = findMongo.containsKey("time") ? findMongo.get("time").toString() : "";
-	
-		if (!"".equals(userid) && !"".equals(date) && !"".equals(time)) {
-			findMongo.remove("status");
-			findMongo.remove("qustid_1");
-			findMongo.remove("qustid_2");
-			findMongo.remove("qustid_3");
-			findMongo.remove("qusttype");
-			findMongo.remove("question");
-	
-			Document doc = new Document();
-			doc = this.setDoc(doc, findMongo);
-	
-			Criteria criteria = new Criteria("userid");
-			criteria.is(userid).and("date").is(date).and("time").is(time);
-			Query query = new Query(criteria);
-	
-			HashMap<String, Object> findMap = mongo.findOne(query, HashMap.class, "VCS_REPORT_GRAPH");
-			System.out.println(" mongoFind =============== : " + findMap);
-			if (findMap == null) {
-				doc.put("count", 1);
-				System.out.println("doc =========> " + doc);
-				doc.remove("batchYb");
-				mongo.insert(doc, "VCS_REPORT_GRAPH");
-			} else {
-				doc.remove("batchYb");
-				mongo.updateFirst(query, new Update().inc("count", 1), "VCS_REPORT_GRAPH");
+		for (HashMap hashMap : findMongo) {
+			System.out.println("writeuserprocessbolt input data ================== : " + hashMap);
+			System.out.println("writeuserprocessbolt input qustType ================== : " + hashMap.get("qustType"));
+
+			String userid = hashMap.containsKey("userid") ? hashMap.get("userid").toString() : "";
+			String date = hashMap.containsKey("date") ? hashMap.get("date").toString() : "";
+			String time = hashMap.containsKey("time") ? hashMap.get("time").toString() : "";
+
+			if (!"".equals(userid) && !"".equals(date) && !"".equals(time)) {
+				hashMap.remove("status");
+				hashMap.remove("qustid_1");
+				hashMap.remove("qustid_2");
+				hashMap.remove("qustid_3");
+				hashMap.remove("qusttype");
+				hashMap.remove("question");
+
+				Document doc = new Document();
+				doc = this.setDoc(doc, hashMap);
+
+				Criteria criteria = new Criteria("userid");
+				criteria.is(userid).and("date").is(date).and("time").is(time);
+				Query query = new Query(criteria);
+
+				HashMap<String, Object> findMap = mongo.findOne(query, HashMap.class, "VCS_REPORT_GRAPH");
+				System.out.println(" mongoFind =============== : " + findMap);
+				if (findMap == null) {
+					doc.put("count", 1);
+					System.out.println("doc =========> " + doc);
+					doc.remove("batchYb");
+					mongo.insert(doc, "VCS_REPORT_GRAPH");
+				} else {
+					doc.remove("batchYb");
+					mongo.updateFirst(query, new Update().inc("count", 1), "VCS_REPORT_GRAPH");
+				}
+				Criteria criteriaBatch = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
+				Query queryBatch = new Query(criteria);
+				mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_CHAT_INFO");
 			}
-			
-			Criteria criteriaBatch = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
-			Query queryBatch = new Query(criteria);
-			mongo.updateFirst(query, new Update().set("batchYn", "Y"), "LOG_CHAT_INFO");
 		}
 	}
 

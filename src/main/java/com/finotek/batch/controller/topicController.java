@@ -18,6 +18,10 @@ public class topicController {
 	@Autowired
 	private MongoTemplate mongo;
 	
+	/**
+	 * 처음 받은 토픽명에 따르 다른 MongoDB Collection 에 Insert 한다.
+	 * @param request
+	 */
 	@SuppressWarnings("unchecked")
 	@RequestMapping(value="/topic", method=RequestMethod.POST)
 	public void topic(@RequestBody HashMap<String, Object> request) {
@@ -52,7 +56,6 @@ public class topicController {
 	private void operChat(Document request) {
 		mongo.insert(request, "LOG_OPER_CHAT");
 	}
-	
 	
 	/**
 	 * HashMap -> Document
