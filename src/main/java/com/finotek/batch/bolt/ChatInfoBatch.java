@@ -12,12 +12,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.finotek.batch.controller.UserChatInfoController;
+import com.finotek.batch.controller.operChatController;
 
 @Component
 public class ChatInfoBatch {
 
 	@Autowired
 	private UserChatInfoController chatInfo;
+	
+	@Autowired
+	private operChatController operChat;
 	
 	@Autowired
 	private MongoTemplate mongo;
@@ -76,7 +80,42 @@ public class ChatInfoBatch {
 	}
 	
 	/**
+	 * OPER_CHAT Batch
+	 * 
+	 * MongoDB Collection
+	 * 
+	 * VCS_REPORT_OPER_CHAT_LOG
+	 * VCS_REPORT_DAILY
+	 * VCS_REPORT_INFO
+	 * VCS_REPORT_OPER_CHAT_MONTHLY
+	 * VCS_REPORT_OPER_CHAT_YEARLY
+	 * 
+	 */
+	@SuppressWarnings("rawtypes")
+	@Scheduled(fixedDelayString = "150000")
+	public void operChat() {
+		System.out.println(" operChat Batch Start ");
+		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
+				"LOG_OPER_CHAT");
+		System.out.println(" operChat Batch || size : " + findMongo.size());
+		
+		if(findMongo != null || findMongo.size() != 0) {
+			for (HashMap hashMap : findMongo) {
+				operChat.calcTimerInfo(hashMap);
+				batchYnUpdate(hashMap, "LOG_OPER_CHAT");				
+			}
+		}
+	}
+	
+	/**
 	 * 배치가 성공적으로 돌 경우 MongoDB 배치 완료 표시
+	 * 
+	 * MongoDB Collection
+	 * 
+	 * LOG_OPER_CHAT
+	 * LOG_USER_CONN
+	 * LOG_CHAT_INFO
+	 * 
 	 * @param hashMap
 	 * @param colName
 	 */
