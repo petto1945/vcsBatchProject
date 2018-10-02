@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.finotek.batch.controller.UserChatInfoController;
 import com.finotek.batch.controller.operChatController;
+import com.finotek.batch.util.MongoCollection;
 
 @Component
 public class ChatInfoBatch {
@@ -25,6 +26,9 @@ public class ChatInfoBatch {
 	
 	@Autowired
 	private MongoTemplate mongo;
+	
+	@Autowired
+	private MongoCollection mongoCollection;
 
 	/**
 	 * CHAT_INFO Batch 
@@ -91,7 +95,7 @@ public class ChatInfoBatch {
 	 * VCS_REPORT_OPER_CHAT_YEARLY
 	 * 
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes" })
 	@Scheduled(fixedDelayString = "15000")
 	public void operChat() {
 		System.out.println(" operChat Batch Start ");
