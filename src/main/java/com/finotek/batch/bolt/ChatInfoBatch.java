@@ -64,7 +64,7 @@ public class ChatInfoBatch {
 	 * 
 	 */
 	@SuppressWarnings("rawtypes")
-	@Scheduled(fixedDelayString = "10000")
+//	@Scheduled(fixedDelayString = "10000")
 	public void userConn() {
 		System.out.println(" userConn Start Batch");
 		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
@@ -92,16 +92,21 @@ public class ChatInfoBatch {
 	 * 
 	 */
 	@SuppressWarnings("rawtypes")
-	@Scheduled(fixedDelayString = "150000")
+	@Scheduled(fixedDelayString = "15000")
 	public void operChat() {
 		System.out.println(" operChat Batch Start ");
 		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
 				"LOG_OPER_CHAT");
 		System.out.println(" operChat Batch || size : " + findMongo.size());
+		int num = 0;
 		
 		if(findMongo != null || findMongo.size() != 0) {
 			for (HashMap hashMap : findMongo) {
+				System.out.println("check num : " + ++num);
 				operChat.calcTimerInfo(hashMap);
+				operChat.calcTimeDailyProcessBolt(hashMap, "Daily");		// 일별 상담원 개입 정보
+				operChat.calcTimeDailyProcessBolt(hashMap, "Monthly");	// 월별 상담원 개입 정보
+				operChat.calcTimeDailyProcessBolt(hashMap, "Yearly");		// 연별 상담원 개입 정보
 				batchYnUpdate(hashMap, "LOG_OPER_CHAT");				
 			}
 		}
@@ -124,10 +129,16 @@ public class ChatInfoBatch {
 		System.out.println(" batchYnUpdate Start HashMap : " + hashMap);
 		System.out.println(" collectionName : " + colName);
 		
+		String find = "userid";
 		String userid = hashMap.containsKey("userid") ? hashMap.get("userid").toString() : "";
 		String date = hashMap.containsKey("date") ? hashMap.get("date").toString() : "";
 		
-		Criteria criteriaBatch = new Criteria("userid").is(userid).and("date").is(date).and("batchYn").is("N");
+		if(colName.equals("LOG_OPER_CHAT")) {
+			find = "roomNo";
+			userid = hashMap.containsKey("roomNo") ? hashMap.get("roomNo").toString() : "";
+		}
+		
+		Criteria criteriaBatch = new Criteria(find).is(userid).and("date").is(date).and("batchYn").is("N");
 		Query queryBatch = new Query(criteriaBatch);
 		mongo.updateFirst(queryBatch, new Update().set("batchYn", "Y"), colName);
 	}
