@@ -5,7 +5,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MongoCollection {
 	
-	
 	// CHAT_INFO 질문 성공/실패 정보
 	public static String VCS_REPORT_DASH_COUNT = "VCS_REPORT_DASH_COUNT";			// 메인 대시보드 카운팅 정보
 	public static String VCS_REPORT_ANSWER_STATUS = "VCS_REPORT_ANSWER_STATUS";	// 일반/시나리오 성공한 정보

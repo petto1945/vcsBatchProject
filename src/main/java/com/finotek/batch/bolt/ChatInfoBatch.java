@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 import com.finotek.batch.controller.UserChatInfoController;
 import com.finotek.batch.controller.operChatController;
-import com.finotek.batch.util.MongoCollection;
 
 @Component
 public class ChatInfoBatch {
@@ -26,9 +25,6 @@ public class ChatInfoBatch {
 	
 	@Autowired
 	private MongoTemplate mongo;
-	
-	@Autowired
-	private MongoCollection mongoCollection;
 
 	/**
 	 * CHAT_INFO Batch 
@@ -42,7 +38,7 @@ public class ChatInfoBatch {
 	 * 
 	 */
 	@SuppressWarnings({ "rawtypes" })
-//	@Scheduled(fixedDelayString = "10000")
+	@Scheduled(fixedDelayString = "20000")
 	public void chatInfo() {
 		System.out.println(" chatInfo Start Come On");
 		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
@@ -68,7 +64,7 @@ public class ChatInfoBatch {
 	 * 
 	 */
 	@SuppressWarnings("rawtypes")
-//	@Scheduled(fixedDelayString = "10000")
+	@Scheduled(fixedDelayString = "30000")
 	public void userConn() {
 		System.out.println(" userConn Start Batch");
 		List<HashMap> findMongo = mongo.find(new Query(new Criteria("batchYn").is("N")), HashMap.class,
