@@ -23,5 +23,5 @@ public class MongoCollection {
 	public static String LOG_CHAT_INFO = "LOG_CHAT_INFO";	// 질문 성공/실패 정보
 	public static String LOG_OPER_CHAT = "LOG_OPER_CHAT";	// 상담원 개입 정보
 	public static String LOG_USER_CONN = "LOG_USER_CONN";	// 사용자 정보
-
+	public static String VCS_REPORT_CHAT_REQ = "VCS_REPORT_CHAT_REQ";	// 상담원 관련 Collection
 }

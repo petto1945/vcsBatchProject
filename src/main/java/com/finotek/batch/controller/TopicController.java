@@ -41,6 +41,9 @@ public class TopicController {
 				case "OPER_CHAT" :
 					this.operChat(data);
 					break;
+				case "CHAT_REQ" : 
+					this.chatReq(data);
+					break;
 			}
 		}
 	}
@@ -55,6 +58,10 @@ public class TopicController {
 	
 	private void operChat(Document request) {
 		mongo.insert(request, "LOG_OPER_CHAT");
+	}
+	
+	private void chatReq(Document request) {
+		mongo.insert(request, "VCS_REPORT_CHAT_REQ");
 	}
 	
 	/**
